@@ -219,3 +219,41 @@
 .btn-text.danger:hover {
   color: #ff6b6b;
 }
+/* Context Menu */
+.context-menu {
+  position: fixed;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 6px;
+  padding: 0.25rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  min-width: 140px;
+}
+
+.context-menu button {
+  display: block;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  background: none;
+  border: none;
+  color: #e0e0e0;
+  font-size: 0.85rem;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.15s ease;
+}
+
+.context-menu button:hover {
+  background: #222;
+}
+
+.context-menu button.danger {
+  color: #888;
+}
+
+.context-menu button.danger:hover {
+  background: #2a1a1a;
+  color: #ff6b6b;
+}

@@ -93,9 +93,20 @@ ipcMain.handle('save-note', async (event, folderPath, noteId, content) => {
 
 ipcMain.handle('create-note', async (event, folderPath) => {
   try {
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
-    const noteId = `note-${timestamp}.md`;
-    const filePath = path.join(folderPath, noteId);
+    // Find next available "Untitled Note" number
+    const files = await fs.readdir(folderPath);
+    const untitledFiles = files.filter(f => f.startsWith('Untitled Note'));
+    let counter = untitledFiles.length + 1;
+    let noteId = `Untitled Note ${counter}.md`;
+    let filePath = path.join(folderPath, noteId);
+    
+    // Ensure unique filename
+    while (files.includes(noteId)) {
+      counter++;
+      noteId = `Untitled Note ${counter}.md`;
+      filePath = path.join(folderPath, noteId);
+    }
+    
     await fs.writeFile(filePath, '', 'utf-8');
     return noteId;
   } catch (error) {
@@ -112,5 +123,27 @@ ipcMain.handle('delete-note', async (event, folderPath, noteId) => {
   } catch (error) {
     console.error('Error deleting note:', error);
     return false;
+  }
+});
+
+ipcMain.handle('rename-note', async (event, folderPath, oldNoteId, newTitle) => {
+  try {
+    const oldPath = path.join(folderPath, oldNoteId);
+    const newNoteId = `${newTitle}.md`;
+    const newPath = path.join(folderPath, newNoteId);
+    
+    // Check if new name already exists
+    try {
+      await fs.access(newPath);
+      return { success: false, error: 'A note with this name already exists' };
+    } catch {
+      // File doesn't exist, proceed with rename
+    }
+    
+    await fs.rename(oldPath, newPath);
+    return { success: true, newNoteId };
+  } catch (error) {
+    console.error('Error renaming note:', error);
+    return { success: false, error: error.message };
   }
 });

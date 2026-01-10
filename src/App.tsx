@@ -10,6 +10,7 @@ function App() {
   const [currentNote, setCurrentNote] = useState<Note | null>(null)
   const [content, setContent] = useState('')
   const [isSaving, setIsSaving] = useState(false)
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; note: Note } | null>(null)
 
   const loadNotes = useCallback(async () => {
     if (!folderPath) return
@@ -56,7 +57,13 @@ function App() {
     if (!folderPath || !currentNote) return
     setIsSaving(true)
     await window.electronAPI.saveNote(folderPath, currentNote.id, content)
-    await loadNotes()
+    const updatedNotes = await window.electronAPI.getNotes(folderPath)
+    setNotes(updatedNotes)
+    // Update current note to reflect any changes (like renamed files)
+    const updatedCurrentNote = updatedNotes.find(n => n.id === currentNote.id)
+    if (updatedCurrentNote) {
+      setCurrentNote(updatedCurrentNote)
+    }
     setIsSaving(false)
   }
 
@@ -68,6 +75,57 @@ function App() {
       setContent('')
       await loadNotes()
     }
+  }
+
+  const renameNote = async (note: Note, newTitle: string) => {
+    if (!folderPath || !newTitle.trim()) return
+    const result = await window.electronAPI.renameNote(folderPath, note.id, newTitle.trim())
+    if (result.success) {
+      await loadNotes()
+      // Update current note reference if it was the renamed note
+      if (currentNote?.id === note.id) {
+        const renamedNote = await window.electronAPI.getNotes(folderPath)
+        const updatedNote = renamedNote.find(n => n.id === result.newNoteId)
+        if (updatedNote) {
+          setCurrentNote(updatedNote)
+        }
+      }
+    } else {
+      alert(result.error || 'Failed to rename note')
+    }
+  }
+
+  const deleteNoteById = async (note: Note) => {
+    if (!folderPath) return
+    if (confirm(`Delete "${note.title}"?`)) {
+      await window.electronAPI.deleteNote(folderPath, note.id)
+      if (currentNote?.id === note.id) {
+        setCurrentNote(null)
+        setContent('')
+      }
+      await loadNotes()
+    }
+  }
+
+  const handleContextMenu = (e: React.MouseEvent, note: Note) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setContextMenu({ x: e.clientX, y: e.clientY, note })
+  }
+
+  const handleRenameFromContext = () => {
+    if (!contextMenu) return
+    const newTitle = prompt('Enter new name:', contextMenu.note.title)
+    if (newTitle && newTitle.trim()) {
+      renameNote(contextMenu.note, newTitle.trim())
+    }
+    setContextMenu(null)
+  }
+
+  const handleDeleteFromContext = () => {
+    if (!contextMenu) return
+    deleteNoteById(contextMenu.note)
+    setContextMenu(null)
   }
 
   useEffect(() => {
@@ -94,7 +152,7 @@ function App() {
   }
 
   return (
-    <div className="app">
+    <div className="app" onClick={() => setContextMenu(null)}>
       <aside className="sidebar">
         <div className="sidebar-header">
           <h2>Colecto</h2>
@@ -109,6 +167,7 @@ function App() {
               key={note.id}
               className={`note-item ${currentNote?.id === note.id ? 'active' : ''}`}
               onClick={() => setCurrentNote(note)}
+              onContextMenu={(e) => handleContextMenu(e, note)}
             >
               <div className="note-title">{note.title}</div>
               <div className="note-preview">
@@ -135,7 +194,25 @@ function App() {
               <input
                 type="text"
                 value={currentNote.title}
-                readOnly
+                onChange={(e) => {
+                  const newTitle = e.target.value
+                  setCurrentNote({ ...currentNote, title: newTitle })
+                }}
+                onBlur={async (e) => {
+                  const newTitle = e.target.value.trim()
+                  const originalTitle = currentNote.id.replace('.md', '')
+                  if (newTitle && newTitle !== originalTitle) {
+                    await renameNote(currentNote, newTitle)
+                  } else if (!newTitle) {
+                    // Revert to original title if empty
+                    setCurrentNote({ ...currentNote, title: originalTitle })
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.currentTarget.blur()
+                  }
+                }}
                 className="note-title-input"
               />
               <div className="editor-actions">
@@ -160,8 +237,19 @@ function App() {
           <div className="empty-editor">
             <p>Select a note or create a new one</p>
           </div>
-        )}
+)}
       </main>
+      
+      {contextMenu && (
+        <div
+          className="context-menu"
+          style={{ left: contextMenu.x, top: contextMenu.y }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button onClick={handleRenameFromContext}>Rename</button>
+          <button onClick={handleDeleteFromContext} className="danger">Delete</button>
+        </div>
+      )}
     </div>
   )
 }

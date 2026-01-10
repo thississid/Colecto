@@ -42,7 +42,16 @@
       "electron/**/*"
     ],
     "directories": {
-      "buildResources": "assets"
+      "buildResources": "assets",
+      "output": "release"
+    },
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": ["dmg", "zip"]
+    },
+    "dmg": {
+      "title": "Colecto ${version}",
+      "icon": false
     }
   }
 }

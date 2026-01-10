@@ -5,5 +5,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getNotes: (folderPath) => ipcRenderer.invoke('get-notes', folderPath),
   saveNote: (folderPath, noteId, content) => ipcRenderer.invoke('save-note', folderPath, noteId, content),
   createNote: (folderPath) => ipcRenderer.invoke('create-note', folderPath),
-  deleteNote: (folderPath, noteId) => ipcRenderer.invoke('delete-note', folderPath, noteId)
+  deleteNote: (folderPath, noteId) => ipcRenderer.invoke('delete-note', folderPath, noteId),
+  renameNote: (folderPath, oldNoteId, newTitle) => ipcRenderer.invoke('rename-note', folderPath, oldNoteId, newTitle)
 });

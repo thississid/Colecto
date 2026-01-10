@@ -6,6 +6,7 @@ declare global {
       saveNote: (folderPath: string, noteId: string, content: string) => Promise<boolean>;
       createNote: (folderPath: string) => Promise<string | null>;
       deleteNote: (folderPath: string, noteId: string) => Promise<boolean>;
+      renameNote: (folderPath: string, oldNoteId: string, newTitle: string) => Promise<{ success: boolean; newNoteId?: string; error?: string }>;
     };
   }
 }
