@@ -1,0 +1,221 @@
+.app {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+}
+
+.welcome {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  width: 100vw;
+  background: #0a0a0a;
+}
+
+.welcome-content {
+  text-align: center;
+}
+
+.welcome h1 {
+  font-size: 3rem;
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.5rem;
+  color: #e0e0e0;
+}
+
+.welcome p {
+  font-size: 1rem;
+  color: #888;
+  margin-bottom: 2rem;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 280px;
+  background: #111;
+  border-right: 1px solid #222;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-header {
+  padding: 1.5rem 1rem 1rem;
+  border-bottom: 1px solid #222;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sidebar-header h2 {
+  font-size: 1.1rem;
+  font-weight: 400;
+  color: #e0e0e0;
+}
+
+.note-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem 0;
+}
+
+.note-item {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  border-left: 2px solid transparent;
+  transition: all 0.15s ease;
+}
+
+.note-item:hover {
+  background: #161616;
+}
+
+.note-item.active {
+  background: #1a1a1a;
+  border-left-color: #666;
+}
+
+.note-title {
+  font-size: 0.9rem;
+  color: #e0e0e0;
+  margin-bottom: 0.25rem;
+  font-weight: 400;
+}
+
+.note-preview {
+  font-size: 0.75rem;
+  color: #666;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.empty-state {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: #555;
+  font-size: 0.85rem;
+}
+
+.sidebar-footer {
+  padding: 1rem;
+  border-top: 1px solid #222;
+}
+
+/* Editor */
+.editor {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #0a0a0a;
+}
+
+.editor-header {
+  padding: 1.5rem 2rem 1rem;
+  border-bottom: 1px solid #1a1a1a;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.note-title-input {
+  background: none;
+  border: none;
+  color: #e0e0e0;
+  font-size: 1.5rem;
+  font-weight: 300;
+  outline: none;
+  flex: 1;
+}
+
+.editor-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.status {
+  font-size: 0.75rem;
+  color: #666;
+}
+
+.editor-content {
+  flex: 1;
+  padding: 2rem;
+  background: none;
+  border: none;
+  color: #e0e0e0;
+  font-size: 1rem;
+  line-height: 1.7;
+  resize: none;
+  outline: none;
+  font-family: inherit;
+}
+
+.editor-content::placeholder {
+  color: #444;
+}
+
+.empty-editor {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #555;
+}
+
+/* Buttons */
+.btn-primary {
+  padding: 0.75rem 2rem;
+  background: #222;
+  color: #e0e0e0;
+  border: 1px solid #333;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-primary:hover {
+  background: #2a2a2a;
+  border-color: #444;
+}
+
+.btn-icon {
+  width: 32px;
+  height: 32px;
+  background: #1a1a1a;
+  color: #e0e0e0;
+  border: 1px solid #2a2a2a;
+  border-radius: 4px;
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-icon:hover {
+  background: #222;
+  border-color: #333;
+}
+
+.btn-text {
+  padding: 0.5rem 1rem;
+  background: none;
+  color: #888;
+  border: none;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.btn-text:hover {
+  color: #e0e0e0;
+}
+
+.btn-text.danger:hover {
+  color: #ff6b6b;
+}
