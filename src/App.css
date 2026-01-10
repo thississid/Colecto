@@ -150,7 +150,7 @@
   line-height: 1.7;
   resize: none;
   outline: none;
-  font-family: inherit;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Consolas', 'Courier New', monospace;
 }
 
 .editor-content::placeholder {
