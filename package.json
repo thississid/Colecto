@@ -47,11 +47,15 @@
     },
     "mac": {
       "category": "public.app-category.productivity",
-      "target": ["dmg", "zip"]
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "icon": "assets/icon.png"
     },
     "dmg": {
       "title": "Colecto ${version}",
-      "icon": false
+      "icon": "assets/icon.png"
     }
   }
 }

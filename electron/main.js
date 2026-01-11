@@ -10,6 +10,7 @@ function createWindow() {
     height: 800,
     backgroundColor: '#0a0a0a',
     titleBarStyle: 'hiddenInset',
+    icon: path.join(__dirname, '../assets/icon.png'),
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -17,7 +18,8 @@ function createWindow() {
     }
   });
 
-  const isDev = process.env.NODE_ENV !== 'production';
+  // Check if running in development (localhost server available)
+  const isDev = !app.isPackaged;
   
   if (isDev) {
     mainWindow.loadURL('http://localhost:5173');
