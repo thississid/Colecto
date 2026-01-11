@@ -17,6 +17,8 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('')
   const [sortBy, setSortBy] = useState<SortOption>('modified')
   const [showSortMenu, setShowSortMenu] = useState(false)
+  const [selectedNotes, setSelectedNotes] = useState<Set<string>>(new Set())
+  const [lastClickedIndex, setLastClickedIndex] = useState<number | null>(null)
 
   const loadNotes = useCallback(async () => {
     if (!folderPath) return
@@ -33,6 +35,12 @@ function App() {
       setContent(currentNote.content)
     }
   }, [currentNote])
+
+  // Clear selection when search query changes
+  useEffect(() => {
+    setSelectedNotes(new Set())
+    setLastClickedIndex(null)
+  }, [searchQuery])
 
   // Filter and sort notes
   const filteredAndSortedNotes = useMemo(() => {
@@ -216,11 +224,60 @@ function App() {
           deleteNote()
         }
       }
+      // Shift + Arrow keys: Multi-select notes
+      if (e.shiftKey && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+        if (document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
+          e.preventDefault()
+          const currentIndex = filteredAndSortedNotes.findIndex(n => n.id === currentNote?.id)
+          if (currentIndex === -1) return
+          
+          const newIndex = e.key === 'ArrowDown' 
+            ? Math.min(currentIndex + 1, filteredAndSortedNotes.length - 1)
+            : Math.max(currentIndex - 1, 0)
+          
+          if (newIndex !== currentIndex) {
+            const startIndex = lastClickedIndex !== null ? lastClickedIndex : currentIndex
+            const endIndex = newIndex
+            const minIndex = Math.min(startIndex, endIndex)
+            const maxIndex = Math.max(startIndex, endIndex)
+            
+            const newSelected = new Set(selectedNotes)
+            for (let i = minIndex; i <= maxIndex; i++) {
+              newSelected.add(filteredAndSortedNotes[i].id)
+            }
+            setSelectedNotes(newSelected)
+            setCurrentNote(filteredAndSortedNotes[newIndex])
+          }
+        }
+      }
+      // Arrow keys without Shift: Navigate and clear selection
+      if (!e.shiftKey && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+        if (document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
+          e.preventDefault()
+          const currentIndex = filteredAndSortedNotes.findIndex(n => n.id === currentNote?.id)
+          if (currentIndex === -1 && filteredAndSortedNotes.length > 0) {
+            setCurrentNote(filteredAndSortedNotes[0])
+            setSelectedNotes(new Set([filteredAndSortedNotes[0].id]))
+            setLastClickedIndex(0)
+            return
+          }
+          
+          const newIndex = e.key === 'ArrowDown' 
+            ? Math.min(currentIndex + 1, filteredAndSortedNotes.length - 1)
+            : Math.max(currentIndex - 1, 0)
+          
+          if (newIndex !== currentIndex) {
+            setCurrentNote(filteredAndSortedNotes[newIndex])
+            setSelectedNotes(new Set([filteredAndSortedNotes[newIndex].id]))
+            setLastClickedIndex(newIndex)
+          }
+        }
+      }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [folderPath, currentNote, searchQuery, createNote, saveNote, deleteNote])
+  }, [folderPath, currentNote, searchQuery, createNote, saveNote, deleteNote, filteredAndSortedNotes, selectedNotes, lastClickedIndex])
 
   const highlightSearch = (text: string, query: string) => {
     if (!query.trim()) return text
@@ -290,35 +347,50 @@ function App() {
               </button>
             )}
           </div>
-          <div className="sort-container">
+          <div className="sort-container" onClick={(e) => e.stopPropagation()}>
             <button 
               className="sort-button"
-              onClick={() => setShowSortMenu(!showSortMenu)}
+              onClick={(e) => {
+                e.stopPropagation()
+                setShowSortMenu(!showSortMenu)
+              }}
               title="Sort notes"
             >
-              {sortBy === 'modified' && '🕐'}
-              {sortBy === 'title' && '🔤'}
-              {sortBy === 'created' && '📅'}
+              {sortBy === 'modified' && '↓'}
+              {sortBy === 'title' && 'A-Z'}
+              {sortBy === 'created' && '↑'}
             </button>
             {showSortMenu && (
-              <div className="sort-menu">
+              <div className="sort-menu" onClick={(e) => e.stopPropagation()}>
                 <button 
                   className={sortBy === 'modified' ? 'active' : ''}
-                  onClick={() => { setSortBy('modified'); setShowSortMenu(false); }}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setSortBy('modified')
+                    setShowSortMenu(false)
+                  }}
                 >
-                  🕐 Recently Modified
+                  ↓ Recently Modified
                 </button>
                 <button 
                   className={sortBy === 'title' ? 'active' : ''}
-                  onClick={() => { setSortBy('title'); setShowSortMenu(false); }}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setSortBy('title')
+                    setShowSortMenu(false)
+                  }}
                 >
-                  🔤 Title (A-Z)
+                  A-Z Title
                 </button>
                 <button 
                   className={sortBy === 'created' ? 'active' : ''}
-                  onClick={() => { setSortBy('created'); setShowSortMenu(false); }}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setSortBy('created')
+                    setShowSortMenu(false)
+                  }}
                 >
-                  📅 Oldest First
+                  ↑ Oldest First
                 </button>
               </div>
             )}
@@ -333,16 +405,53 @@ function App() {
                   {filteredAndSortedNotes.length} {filteredAndSortedNotes.length === 1 ? 'note' : 'notes'} found
                 </div>
               )}
-              {filteredAndSortedNotes.map(note => {
+              {selectedNotes.size > 1 && (
+                <div className="selection-info">
+                  {selectedNotes.size} notes selected
+                </div>
+              )}
+              {filteredAndSortedNotes.map((note, index) => {
                 const modifiedDate = new Date(note.modified)
                 const isToday = modifiedDate.toDateString() === new Date().toDateString()
                 const isThisWeek = (Date.now() - modifiedDate.getTime()) < 7 * 24 * 60 * 60 * 1000
+                const isSelected = selectedNotes.has(note.id)
+                const isActive = currentNote?.id === note.id
+                
+                const handleNoteClick = (e: React.MouseEvent) => {
+                  if (e.shiftKey && lastClickedIndex !== null) {
+                    // Range selection with Shift+Click
+                    const startIndex = Math.min(lastClickedIndex, index)
+                    const endIndex = Math.max(lastClickedIndex, index)
+                    const newSelected = new Set(selectedNotes)
+                    for (let i = startIndex; i <= endIndex; i++) {
+                      newSelected.add(filteredAndSortedNotes[i].id)
+                    }
+                    setSelectedNotes(newSelected)
+                    setCurrentNote(note)
+                  } else if (e.metaKey || e.ctrlKey) {
+                    // Toggle selection with Cmd/Ctrl+Click
+                    const newSelected = new Set(selectedNotes)
+                    if (newSelected.has(note.id)) {
+                      newSelected.delete(note.id)
+                    } else {
+                      newSelected.add(note.id)
+                    }
+                    setSelectedNotes(newSelected)
+                    setCurrentNote(note)
+                    setLastClickedIndex(index)
+                  } else {
+                    // Single click - clear selection and select one
+                    setCurrentNote(note)
+                    setSelectedNotes(new Set([note.id]))
+                    setLastClickedIndex(index)
+                  }
+                }
                 
                 return (
                   <div
                     key={note.id}
-                    className={`note-item ${currentNote?.id === note.id ? 'active' : ''}`}
-                    onClick={() => setCurrentNote(note)}
+                    className={`note-item ${isActive ? 'active' : ''} ${isSelected ? 'selected' : ''}`}
+                    onClick={handleNoteClick}
                     onContextMenu={(e) => handleContextMenu(e, note)}
                   >
                     <div className="note-item-header">
